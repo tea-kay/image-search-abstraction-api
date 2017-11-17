@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var fetch = require('isomorphic-fetch');
 var mongoose = require('mongoose');
-
+var Term = require('../model/term')
 // const paginate = require("paginate-array");
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/recent-terms', {
@@ -14,43 +14,43 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/search/:term', function(req, res, next) {
+router.get('api/search/:term', function(req, res, next) {
   const BASE_URL = 'https://api.cognitive.microsoft.com/bing/v7.0/images/search'
 
-  // Term.insert(
-  //   new Term({
-  //     term: req.params.term
-  //   }));
+  const newTerm = new Term({ term: req.params.term })
 
-  fetch(`${BASE_URL}/?q=${req.params.term}`, {
-    headers: {
-      'Ocp-Apim-Subscription-Key': process.env.AZURE_KEY_1
-    }
-
-  }).then((response) => {
-    return response.json()
-  }).then((results) => {
-    var newValueArr = [];
-
-    for(var i=0; i<results.value.length; i++) {
-      var valueObj = {};
-      var valueArr = results.value;
-
-      valueObj.url = valueArr[i].contentUrl;
-      valueObj.name = valueArr[i].name;
-      valueObj.thumbnail = valueArr[i].thumbnailUrl;
-      valueObj.context = valueArr[i].hostPageUrl;
-
-      newValueArr.push(valueObj);
-    }
-
-    return res.send(newValueArr)
+  newTerm.save(err => {
+    if (err) return next(err)
+    const newUrl = `${BASE_URL}/?q=${req.params.term}?offset=${req.query.offset}`;
+    fetch(newUrl, {
+      headers: {
+        'Ocp-Apim-Subscription-Key': process.env.AZURE_KEY_1
+      }
+    }).then((response) => {
+      return response.json()
+    }).then((results) => {
+      var newValueArr = results.value.map(({ contentUrl: url, name, thumbnailUrl: thumbnail, hostPageUrl: context }) => {
+        return { url, name, thumbnail, context }
+      })
+      return res.send(newValueArr)
+    })
   })
 })
 
-router.get('recent/imagesearch', (req, res, next) => {
+router.get('/imagesearch/', (req, res, next) => {
 
-  res.send()
+  Term.find({}, (err, result) => {
+    var imageSearch = result.reduce((acc, term) => {
+      var termObj = {};
+      termObj['term'] = term['term']
+      termObj['searched'] = term['createdAt']
+
+      acc.push(termObj);
+
+      return acc;
+    }, [])
+    return res.json(imageSearch);;
+  })
 })
 
 module.exports = router;
