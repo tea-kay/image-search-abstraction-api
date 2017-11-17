@@ -14,7 +14,7 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('api/search/:term', function(req, res, next) {
+router.get('/search/:term', function(req, res, next) {
   const BASE_URL = 'https://api.cognitive.microsoft.com/bing/v7.0/images/search'
 
   const newTerm = new Term({ term: req.params.term })
@@ -47,7 +47,7 @@ router.get('/imagesearch/', (req, res, next) => {
 
       acc.push(termObj);
 
-      return acc;
+      return acc.reverse();
     }, [])
     return res.json(imageSearch);;
   })

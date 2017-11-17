@@ -1,5 +1,14 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  h1.title Tim's FreeCodeCamp Project
+  h2 Image Search Abstraction Layer API
+  p.red  Example Usage:
+  p.step 1. Add search the url:
+  p -- localhost:3000/search/
+  p.step 2. Add your query after search:
+  p -- localhost:3000/search/penguins
+  p.step 3. Feel free to offset your search by adding an offset parameter:
+  p -- localhost:3000/search/penguins?offset=7
+  p.step 4. Lastly, you may view recent searches by visiting:
+  p -- localhost:3000/imagesearch/
